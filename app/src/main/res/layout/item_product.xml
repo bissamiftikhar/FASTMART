@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:background="@color/white">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="150dp">
+
+        <ImageView
+            android:id="@+id/imgProduct"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_launcher_foreground"
+            android:background="@color/light_gray"/>
+
+        <ImageView
+            android:id="@+id/imgHeart"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@android:drawable/btn_star_big_off"
+            android:layout_gravity="top|end"
+            android:padding="4dp"/>
+
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/tvProductName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Product Name"
+        android:textColor="@color/black"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:layout_marginTop="6dp"/>
+
+    <TextView
+        android:id="@+id/tvProductPrice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="$349.99"
+        android:textColor="@color/price_red"
+        android:textSize="13sp"/>
+
+    <TextView
+        android:id="@+id/tvProductDescription"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Description"
+        android:textColor="@color/text_gray"
+        android:textSize="11sp"/>
+
+    <TextView
+        android:id="@+id/tvProductId"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:text="0"/>
+
+</LinearLayout>
