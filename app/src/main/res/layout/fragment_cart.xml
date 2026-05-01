@@ -6,6 +6,12 @@
     android:background="@color/white"
     android:padding="16dp">
 
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -16,7 +22,7 @@
         android:layout_marginBottom="16dp"/>
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvCart"
+        android:id="@+id/rv_cart"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"/>
@@ -38,7 +44,7 @@
             android:textStyle="bold"/>
 
         <TextView
-            android:id="@+id/tvTotal"
+            android:id="@+id/tv_total_price"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="$0.00"
@@ -49,7 +55,7 @@
     </LinearLayout>
 
     <Button
-        android:id="@+id/btnCheckout"
+        android:id="@+id/btn_checkout"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:text="@string/checkout"

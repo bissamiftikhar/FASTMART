@@ -8,7 +8,7 @@
     android:background="@color/white">
 
     <ImageView
-        android:id="@+id/imgFavProduct"
+        android:id="@+id/ivFavImage"
         android:layout_width="70dp"
         android:layout_height="70dp"
         android:scaleType="centerCrop"
@@ -51,14 +51,14 @@
     </LinearLayout>
 
     <ImageView
-        android:id="@+id/btnAddToCart"
+        android:id="@+id/ivFavCart"
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:src="@android:drawable/ic_menu_add"
         android:layout_marginEnd="8dp"/>
 
     <ImageView
-        android:id="@+id/btnMoreOptions"
+        android:id="@+id/ivFavMenu"
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:src="@android:drawable/ic_menu_more"/>

@@ -83,26 +83,26 @@ public class SearchFragment extends Fragment {
 
     private void buildProductList() {
         allProducts = new ArrayList<>();
-        allProducts.add(new Product("SONY WH-1000XM4 Black", "Model: WH-1000XM4, Black", 349.99, 399.99, android.R.drawable.ic_menu_gallery));
-        allProducts.add(new Product("SONY WH-1000XM4 Beige", "Model: WH-1000XM4, Beige", 349.99, 399.99, android.R.drawable.ic_menu_gallery));
-        allProducts.add(new Product("SHURE SM7B", "Studio microphone", 379.49, 429.99, android.R.drawable.ic_menu_gallery));
-        allProducts.add(new Product("XIAOMI Redmi Watch 3", "42.58mm, Aluminium", 94.90, 119.99, android.R.drawable.ic_menu_gallery));
-        allProducts.add(new Product("Google Nest Mini", "Google Assistant, IFTTT", 70.99, 99.99, android.R.drawable.ic_menu_gallery));
-        allProducts.add(new Product("Samsung Galaxy Buds", "Active noise cancellation", 149.99, 199.99, android.R.drawable.ic_menu_gallery));
-        allProducts.add(new Product("JBL Flip 6", "Portable waterproof speaker", 99.99, 129.99, android.R.drawable.ic_menu_gallery));
-        allProducts.add(new Product("Apple Watch SE", "GPS, 40mm, Aluminium", 229.99, 279.99, android.R.drawable.ic_menu_gallery));
-        allProducts.add(new Product("Logitech MX Master 3", "Advanced wireless mouse", 89.99, 109.99, android.R.drawable.ic_menu_gallery));
-        allProducts.add(new Product("Keychron K2", "Wireless mechanical keyboard", 89.99, 109.99, android.R.drawable.ic_menu_gallery));
-        allProducts.add(new Product("Dell 27 Monitor", "4K IPS display", 399.99, 499.99, android.R.drawable.ic_menu_gallery));
-        allProducts.add(new Product("Anker PowerBank", "20000mAh, 65W", 59.99, 79.99, android.R.drawable.ic_menu_gallery));
-        allProducts.add(new Product("GoPro Hero 12", "5.3K video, waterproof", 349.99, 399.99, android.R.drawable.ic_menu_gallery));
-        allProducts.add(new Product("DJI Mini 3", "Lightweight drone, 4K", 459.99, 529.99, android.R.drawable.ic_menu_gallery));
-        allProducts.add(new Product("Kindle Paperwhite", "6.8 display, waterproof", 139.99, 169.99, android.R.drawable.ic_menu_gallery));
-        allProducts.add(new Product("Razer DeathAdder", "Gaming mouse, 20K DPI", 49.99, 69.99, android.R.drawable.ic_menu_gallery));
-        allProducts.add(new Product("HyperX Cloud II", "Gaming headset, 7.1", 79.99, 99.99, android.R.drawable.ic_menu_gallery));
-        allProducts.add(new Product("Elgato Stream Deck", "15 LCD keys", 129.99, 159.99, android.R.drawable.ic_menu_gallery));
-        allProducts.add(new Product("Blue Yeti Mic", "USB condenser microphone", 109.99, 139.99, android.R.drawable.ic_menu_gallery));
-        allProducts.add(new Product("TP-Link Deco XE75", "WiFi 6E mesh system", 179.99, 229.99, android.R.drawable.ic_menu_gallery));
+        allProducts.add(new Product("1", "SONY WH-1000XM4 Black", "Electronics", "Model: WH-1000XM4, Black", 349.99, android.R.drawable.ic_menu_gallery, "seller1"));
+        allProducts.add(new Product("2", "SONY WH-1000XM4 Beige", "Electronics", "Model: WH-1000XM4, Beige", 349.99, android.R.drawable.ic_menu_gallery, "seller1"));
+        allProducts.add(new Product("3", "SHURE SM7B", "Electronics", "Studio microphone", 379.49, android.R.drawable.ic_menu_gallery, "seller2"));
+        allProducts.add(new Product("4", "XIAOMI Redmi Watch 3", "Electronics", "42.58mm, Aluminium", 94.90, android.R.drawable.ic_menu_gallery, "seller3"));
+        allProducts.add(new Product("5", "Google Nest Mini", "Electronics", "Google Assistant, IFTTT", 70.99, android.R.drawable.ic_menu_gallery, "seller4"));
+        allProducts.add(new Product("6", "Samsung Galaxy Buds", "Electronics", "Active noise cancellation", 149.99, android.R.drawable.ic_menu_gallery, "seller5"));
+        allProducts.add(new Product("7", "JBL Flip 6", "Electronics", "Portable waterproof speaker", 99.99, android.R.drawable.ic_menu_gallery, "seller6"));
+        allProducts.add(new Product("8", "Apple Watch SE", "Electronics", "GPS, 40mm, Aluminium", 229.99, android.R.drawable.ic_menu_gallery, "seller7"));
+        allProducts.add(new Product("9", "Logitech MX Master 3", "Electronics", "Advanced wireless mouse", 89.99, android.R.drawable.ic_menu_gallery, "seller8"));
+        allProducts.add(new Product("10", "Keychron K2", "Electronics", "Wireless mechanical keyboard", 89.99, android.R.drawable.ic_menu_gallery, "seller9"));
+        allProducts.add(new Product("11", "Dell 27 Monitor", "Electronics", "4K IPS display", 399.99, android.R.drawable.ic_menu_gallery, "seller10"));
+        allProducts.add(new Product("12", "Anker PowerBank", "Electronics", "20000mAh, 65W", 59.99, android.R.drawable.ic_menu_gallery, "seller1"));
+        allProducts.add(new Product("13", "GoPro Hero 12", "Electronics", "5.3K video, waterproof", 349.99, android.R.drawable.ic_menu_gallery, "seller2"));
+        allProducts.add(new Product("14", "DJI Mini 3", "Electronics", "Lightweight drone, 4K", 459.99, android.R.drawable.ic_menu_gallery, "seller3"));
+        allProducts.add(new Product("15", "Kindle Paperwhite", "Electronics", "6.8 display, waterproof", 139.99, android.R.drawable.ic_menu_gallery, "seller4"));
+        allProducts.add(new Product("16", "Razer DeathAdder", "Electronics", "Gaming mouse, 20K DPI", 49.99, android.R.drawable.ic_menu_gallery, "seller5"));
+        allProducts.add(new Product("17", "HyperX Cloud II", "Electronics", "Gaming headset, 7.1", 79.99, android.R.drawable.ic_menu_gallery, "seller6"));
+        allProducts.add(new Product("18", "Elgato Stream Deck", "Electronics", "15 LCD keys", 129.99, android.R.drawable.ic_menu_gallery, "seller7"));
+        allProducts.add(new Product("19", "Blue Yeti Mic", "Electronics", "USB condenser microphone", 109.99, android.R.drawable.ic_menu_gallery, "seller8"));
+        allProducts.add(new Product("20", "TP-Link Deco XE75", "Electronics", "WiFi 6E mesh system", 179.99, android.R.drawable.ic_menu_gallery, "seller9"));
     }
 
     private void loadSearchHistory() {

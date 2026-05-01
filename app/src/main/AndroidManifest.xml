@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.SEND_SMS"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
     <uses-feature android:name="android.hardware.telephony" android:required="false"/>
     <application
         android:allowBackup="true"
@@ -30,6 +31,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".activities.SignupActivity" android:exported="false"/>
+        <activity android:name=".activities.SellerMainActivity" android:exported="false"/>
+        <activity android:name=".activities.AddProductActivity" android:exported="false"/>
+        <activity android:name=".activities.ChatActivity" android:exported="false"/>
+        <activity android:name=".activities.ChatRoomActivity" android:exported="false"/>
+        <activity android:name=".activities.ProductDescriptionActivity" android:exported="false"/>
     </application>
 
 </manifest>

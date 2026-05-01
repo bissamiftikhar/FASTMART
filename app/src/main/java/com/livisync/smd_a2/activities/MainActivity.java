@@ -1,60 +1,48 @@
 package com.livisync.smd_a2.activities;
 
 import android.os.Bundle;
-
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.livisync.smd_a2.R;
-import com.livisync.smd_a2.fragments.CartFragment;
-import com.livisync.smd_a2.fragments.FavouritesFragment;
-import com.livisync.smd_a2.fragments.HomeFragment;
-import com.livisync.smd_a2.fragments.ProfileFragment;
-import com.livisync.smd_a2.fragments.SearchFragment;
+import com.livisync.smd_a2.fragments.buyer.*;
+import android.content.Intent;
 
 public class MainActivity extends AppCompatActivity {
-    
+
+    private BottomNavigationView bottomNav;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
-        
-        if (savedInstanceState == null) {
-            loadFragment(new HomeFragment());
-        }
 
-        bottomNavigationView.setOnItemSelectedListener(item -> {
+        bottomNav = findViewById(R.id.bottomNavigationView);
+
+        // Load home by default
+        loadFragment(new HomeFragment());
+
+        bottomNav.setOnItemSelectedListener(item -> {
+            Fragment fragment;
             int id = item.getItemId();
-            Fragment fragment = null;
-
-            if (id == R.id.nav_home) {
-                fragment = new HomeFragment();
-            } else if (id == R.id.nav_search) {
-                fragment = new SearchFragment();
-            } else if (id == R.id.nav_favourites) {
-                fragment = new FavouritesFragment();
-            } else if (id == R.id.nav_cart) {
-                fragment = new CartFragment();
-            } else if (id == R.id.nav_profile) {
-                fragment = new ProfileFragment();
-            }
-
-            if (fragment != null) {
-                loadFragment(fragment);
-                return true;
-            }
-            return false;
+            if (id == R.id.nav_home) fragment = new HomeFragment();
+            else if (id == R.id.nav_favourites) fragment = new FavouritesFragment();
+            else if (id == R.id.nav_cart) fragment = new CartFragment();
+            else if (id == R.id.nav_account) fragment = new BuyerAccountFragment();
+            else return false;
+            loadFragment(fragment);
+            return true;
         });
+
+        // Chat FAB
+        FloatingActionButton fabChat = findViewById(R.id.fabChat);
+        fabChat.setOnClickListener(v ->
+                startActivity(new Intent(this, ChatActivity.class)));
     }
 
     private void loadFragment(Fragment fragment) {
-        getSupportFragmentManager()
-                .beginTransaction()
+        getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragmentContainer, fragment)
                 .commit();
     }

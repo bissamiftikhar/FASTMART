@@ -1,128 +1,235 @@
-package com.livisync.smd_a2.fragments;
+package com.livisync.smd_a2.fragments.buyer;
 
-import android.content.Context;
-import android.content.SharedPreferences;
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.livisync.smd_a2.R;
 import com.livisync.smd_a2.adapters.CartAdapter;
+import com.livisync.smd_a2.db.CartDbHelper;
+import com.livisync.smd_a2.models.CartItem;
+import com.livisync.smd_a2.utils.SessionManager;
+import com.livisync.smd_a2.viewmodels.CartViewModel;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
-public class CartFragment extends Fragment implements CartAdapter.TotalUpdateListener {
-
+/**
+ * Fragment displaying shopping cart.
+ * Manages cart items using SQLite with real-time updates.
+ * Supports checkout with SMS notification and Firebase order saving.
+ */
+public class CartFragment extends Fragment {
     private RecyclerView rvCart;
+    private CartAdapter cartAdapter;
+    private CartDbHelper cartDbHelper;
     private TextView tvTotal;
     private Button btnCheckout;
-    private SharedPreferences prefs;
-    private List<Integer> cartPositions;
-    private List<Integer> quantities;
-    private CartAdapter adapter;
+    private ProgressBar progressBar;
+    private CartViewModel cartViewModel;
+    private List<CartItem> cartList;
+    private DatabaseReference ordersRef;
+    private SessionManager sessionManager;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_cart, container, false);
 
-        prefs = requireActivity().getSharedPreferences("app.settings", Context.MODE_PRIVATE);
+        // Initialize database and Firebase
+        cartDbHelper = new CartDbHelper(requireContext());
+        ordersRef = FirebaseDatabase.getInstance().getReference("orders");
+        sessionManager = new SessionManager(requireContext());
 
-        rvCart = view.findViewById(R.id.rvCart);
-        tvTotal = view.findViewById(R.id.tvTotal);
-        btnCheckout = view.findViewById(R.id.btnCheckout);
+        // Initialize ViewModel
+        cartViewModel = new ViewModelProvider(this).get(CartViewModel.class);
 
-        cartPositions = new ArrayList<>();
-        quantities = new ArrayList<>();
+        // Setup UI components
+        rvCart = view.findViewById(R.id.rv_cart);
+        tvTotal = view.findViewById(R.id.tv_total_price);
+        btnCheckout = view.findViewById(R.id.btn_checkout);
+        progressBar = view.findViewById(R.id.progressBar);
 
-        for (int i = 0; i < 20; i++) {
-            if (prefs.getBoolean("cart." + i, false)) {
-                cartPositions.add(i);
-                quantities.add(prefs.getInt("cart.qty." + i, 1));
-            }
-        }
-
-        adapter = new CartAdapter(requireContext(), cartPositions, quantities, this);
-        rvCart.setLayoutManager(new LinearLayoutManager(requireContext()));
-        rvCart.setAdapter(adapter);
-
-        onTotalUpdated();
-
-        btnCheckout.setOnClickListener(v -> {
-            if (cartPositions.isEmpty()) {
-                Toast.makeText(requireContext(), "Cart is empty", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            sendOrderSMS();
+        cartList = new ArrayList<>();
+        cartAdapter = new CartAdapter(requireContext(), cartList, () -> {
+            // Refresh on total changed
+            refreshCartData();
         });
+
+        rvCart.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rvCart.setAdapter(cartAdapter);
+
+        // Observe LiveData for cart items and total
+        cartViewModel.getCartItems().observe(getViewLifecycleOwner(), items -> {
+            if (items != null) {
+                cartList.clear();
+                cartList.addAll(items);
+                cartAdapter.notifyDataSetChanged();
+            }
+        });
+
+        cartViewModel.getTotalPrice().observe(getViewLifecycleOwner(), total -> {
+            if (total != null) {
+                tvTotal.setText(String.format("Total: $%.2f", total));
+            }
+        });
+
+        // Checkout button
+        btnCheckout.setOnClickListener(v -> performCheckout());
+
+        // Initial load
+        refreshCartData();
 
         return view;
     }
 
-    @Override
-    public void onTotalUpdated() {
-        double total = 0;
-        for (int i = 0; i < cartPositions.size(); i++) {
-            int productIndex = cartPositions.get(i);
-            String priceStr = prefs.getString("cart.price." + productIndex, "0");
-            try {
-                double price = Double.parseDouble(priceStr);
-                total += price * quantities.get(i);
-            } catch (NumberFormatException e) {
-                // Ignore invalid prices
-            }
-        }
-        tvTotal.setText(String.format("$%.2f", total));
+    /**
+     * Refresh cart data from database
+     */
+    private void refreshCartData() {
+        List<CartItem> items = cartDbHelper.getAllCartItems();
+        cartList.clear();
+        cartList.addAll(items);
+        cartAdapter.notifyDataSetChanged();
+
+        double total = cartDbHelper.getTotalPrice();
+        tvTotal.setText(String.format("Total: $%.2f", total));
     }
 
-    private void sendOrderSMS() {
-        StringBuilder orderDetails = new StringBuilder("FastMart Order:\n");
-        double total = 0;
+    /**
+     * Perform checkout: validate cart, send SMS, save order to Firebase
+     */
+    private void performCheckout() {
+        if (cartList.isEmpty()) {
+            Toast.makeText(requireContext(), "Cart is empty!", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        for (int i = 0; i < cartPositions.size(); i++) {
-            int productIndex = cartPositions.get(i);
-            String name = prefs.getString("cart.name." + productIndex, "");
-            String priceStr = prefs.getString("cart.price." + productIndex, "0");
-            int qty = quantities.get(i);
+        // Confirm checkout
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Confirm Checkout")
+                .setMessage("Total: $" + String.format("%.2f", cartDbHelper.getTotalPrice()))
+                .setPositiveButton("Proceed", (dialog, which) -> {
+                    progressBar.setVisibility(View.VISIBLE);
+                    checkout();
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
 
+    /**
+     * Process checkout: send SMS and save order
+     */
+    private void checkout() {
+        // Build order summary
+        StringBuilder productNames = new StringBuilder();
+        StringBuilder summary = new StringBuilder("FastMart Order:\n");
+        double totalPrice = 0;
+
+        for (CartItem item : cartList) {
+            productNames.append(item.getName()).append(", ");
+            summary.append(item.getName())
+                    .append(" x").append(item.getQuantity())
+                    .append(" = $").append(String.format("%.2f", item.getPrice() * item.getQuantity()))
+                    .append("\n");
+            totalPrice += item.getPrice() * item.getQuantity();
+        }
+
+        summary.append("\nTotal: $").append(String.format("%.2f", totalPrice));
+
+        // Send SMS
+        sendSms(summary.toString());
+
+        // Save order to Firebase
+        saveOrderToFirebase(productNames.toString().replaceAll(", $", ""), totalPrice);
+
+        progressBar.setVisibility(View.GONE);
+        Toast.makeText(requireContext(), "Order placed successfully!", Toast.LENGTH_LONG).show();
+
+        // Clear cart
+        cartDbHelper.clearCart();
+        refreshCartData();
+    }
+
+    /**
+     * Send SMS with order summary via SmsManager
+     * @param message Order summary message
+     */
+    private void sendSms(String message) {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.SEND_SMS)
+                == PackageManager.PERMISSION_GRANTED) {
             try {
-                double price = Double.parseDouble(priceStr);
-                orderDetails.append(name)
-                        .append(" x").append(qty)
-                        .append(" = $").append(String.format("%.2f", price * qty))
-                        .append("\n");
-                total += price * qty;
-            } catch (NumberFormatException e) {
-                // Ignore
+                SmsManager smsManager = SmsManager.getDefault();
+                // Use a default number or retrieve from user settings
+                String phoneNumber = "+923001234567"; // Replace with actual phone number
+                
+                // SMS has 160 character limit, split if needed
+                if (message.length() > 160) {
+                    ArrayList<String> parts = smsManager.divideMessage(message);
+                    smsManager.sendMultipartTextMessage(phoneNumber, null, parts, null, null);
+                } else {
+                    smsManager.sendTextMessage(phoneNumber, null, message, null, null);
+                }
+                Toast.makeText(requireContext(), "Order SMS sent!", Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                Toast.makeText(requireContext(), "SMS failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
+        } else {
+            // Request SMS permission
+            ActivityCompat.requestPermissions(requireActivity(),
+                    new String[]{Manifest.permission.SEND_SMS}, 100);
         }
+    }
 
-        orderDetails.append("Total: $").append(String.format("%.2f", total));
+    /**
+     * Save order to Firebase Realtime Database
+     * @param productNames Comma-separated product names
+     * @param totalPrice Total order price
+     */
+    private void saveOrderToFirebase(String productNames, double totalPrice) {
+        String uid = sessionManager.getUid();
+        String orderId = "ORD-" + System.currentTimeMillis();
+        String timestamp = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault()).format(new Date());
 
-        try {
-            SmsManager smsManager = SmsManager.getDefault();
-            smsManager.sendTextMessage(
-                    "03001234567",
-                    null,
-                    orderDetails.toString(),
-                    null,
-                    null
-            );
-            Toast.makeText(requireContext(), "Order placed via SMS!", Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            Toast.makeText(requireContext(), "Failed to send SMS", Toast.LENGTH_SHORT).show();
-        }
+        Map<String, Object> order = new HashMap<>();
+        order.put("buyerId", uid);
+        order.put("productNames", productNames);
+        order.put("totalPrice", totalPrice);
+        order.put("timestamp", timestamp);
+        order.put("status", "PROCESSING");
+
+        ordersRef.child(uid).child(orderId).setValue(order)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(requireContext(), "Order saved to database", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(requireContext(), "Failed to save order: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                });
     }
 }

@@ -1,40 +1,27 @@
 package com.livisync.smd_a2.adapters;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
-
+import android.view.*;
+import android.widget.*;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.livisync.smd_a2.R;
-
+import com.livisync.smd_a2.db.DatabaseHelper;
+import com.livisync.smd_a2.models.CartItem;
 import java.util.List;
 
 public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder> {
 
-    private final Context context;
-    private final List<Integer> cartPositions;
-    private final List<Integer> quantities;
-    private final SharedPreferences prefs;
-    private final TotalUpdateListener totalUpdateListener;
+    private Context context;
+    private List<CartItem> cartList;
+    private DatabaseHelper dbHelper;
+    private Runnable onTotalChanged;
 
-    public interface TotalUpdateListener {
-        void onTotalUpdated();
-    }
-
-    public CartAdapter(Context context, List<Integer> cartPositions,
-                       List<Integer> quantities, TotalUpdateListener listener) {
+    public CartAdapter(Context context, List<CartItem> cartList, Runnable onTotalChanged) {
         this.context = context;
-        this.cartPositions = cartPositions;
-        this.quantities = quantities;
-        this.prefs = context.getSharedPreferences("app.settings", Context.MODE_PRIVATE);
-        this.totalUpdateListener = listener;
+        this.cartList = cartList;
+        this.dbHelper = new DatabaseHelper(context);
+        this.onTotalChanged = onTotalChanged;
     }
 
     @NonNull
@@ -46,81 +33,67 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull CartViewHolder holder, int position) {
-        int productIndex = cartPositions.get(position);
-        int qty = quantities.get(position);
+        CartItem item = cartList.get(position);
 
-        String name = prefs.getString("cart.name." + productIndex, "");
-        String price = prefs.getString("cart.price." + productIndex, "");
-        String desc = prefs.getString("cart.desc." + productIndex, "");
+        holder.tvName.setText(item.getName());
+        holder.tvPrice.setText("$" + String.format("%.2f", item.getPrice() * item.getQuantity()));
+        holder.tvQty.setText(String.valueOf(item.getQuantity()));
 
-        holder.tvName.setText(name);
-        holder.tvPrice.setText(String.format("$%s", price));
-        holder.tvDesc.setText(desc);
-        holder.tvQuantity.setText(String.valueOf(qty));
+        int[] images = {android.R.drawable.ic_menu_gallery, android.R.drawable.ic_menu_gallery, android.R.drawable.ic_menu_gallery,
+                android.R.drawable.ic_menu_gallery, android.R.drawable.ic_menu_gallery, android.R.drawable.ic_menu_gallery,
+                android.R.drawable.ic_menu_gallery, android.R.drawable.ic_menu_gallery};
+        int imgId = item.getImageResId();
+        holder.ivImage.setImageResource(imgId >= 0 && imgId < images.length ? images[imgId] : images[0]);
 
-        holder.btnIncrease.setOnClickListener(v -> {
-            int currentPos = holder.getAdapterPosition();
-            if (currentPos != RecyclerView.NO_POSITION) {
-                int currentQty = quantities.get(currentPos);
-                quantities.set(currentPos, currentQty + 1);
-                holder.tvQuantity.setText(String.valueOf(currentQty + 1));
-                totalUpdateListener.onTotalUpdated();
+        // Increase quantity
+        holder.btnPlus.setOnClickListener(v -> {
+            int qty = item.getQuantity() + 1;
+            item.setQuantity(qty);
+            dbHelper.updateCartQuantity(item.getProductId(), qty);
+            holder.tvQty.setText(String.valueOf(qty));
+            holder.tvPrice.setText("$" + String.format("%.2f", item.getPrice() * qty));
+            onTotalChanged.run();
+        });
+
+        // Decrease quantity
+        holder.btnMinus.setOnClickListener(v -> {
+            if (item.getQuantity() > 1) {
+                int qty = item.getQuantity() - 1;
+                item.setQuantity(qty);
+                dbHelper.updateCartQuantity(item.getProductId(), qty);
+                holder.tvQty.setText(String.valueOf(qty));
+                holder.tvPrice.setText("$" + String.format("%.2f", item.getPrice() * qty));
+                onTotalChanged.run();
             }
         });
 
-        holder.btnDecrease.setOnClickListener(v -> {
-            int currentPos = holder.getAdapterPosition();
-            if (currentPos != RecyclerView.NO_POSITION) {
-                int currentQty = quantities.get(currentPos);
-                if (currentQty > 1) {
-                    quantities.set(currentPos, currentQty - 1);
-                    holder.tvQuantity.setText(String.valueOf(currentQty - 1));
-                    totalUpdateListener.onTotalUpdated();
-                }
-            }
-        });
-
-        holder.btnMore.setOnClickListener(v -> {
-            int currentPos = holder.getAdapterPosition();
-            if (currentPos != RecyclerView.NO_POSITION) {
-                int prodIndex = cartPositions.get(currentPos);
-
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.remove("cart." + prodIndex);
-                editor.remove("cart.name." + prodIndex);
-                editor.remove("cart.price." + prodIndex);
-                editor.remove("cart.desc." + prodIndex);
-                editor.remove("cart.qty." + prodIndex);
-                editor.apply();
-
-                cartPositions.remove(currentPos);
-                quantities.remove(currentPos);
-                notifyItemRemoved(currentPos);
-                notifyItemRangeChanged(currentPos, cartPositions.size());
-                totalUpdateListener.onTotalUpdated();
-            }
+        // Three dot delete
+        holder.ivMenu.setOnClickListener(v -> {
+            dbHelper.removeFromCart(item.getProductId());
+            cartList.remove(position);
+            notifyItemRemoved(position);
+            notifyItemRangeChanged(position, cartList.size());
+            onTotalChanged.run();
         });
     }
 
     @Override
-    public int getItemCount() {
-        return cartPositions.size();
-    }
+    public int getItemCount() { return cartList.size(); }
 
     public static class CartViewHolder extends RecyclerView.ViewHolder {
-        ImageView btnMore;
-        TextView tvName, tvPrice, tvDesc, tvQuantity;
-        Button btnIncrease, btnDecrease;
+        ImageView ivImage, ivMenu;
+        TextView tvName, tvPrice, tvQty;
+        Button btnPlus, btnMinus;
 
-        public CartViewHolder(View itemView) {
+        public CartViewHolder(@NonNull View itemView) {
             super(itemView);
-            btnMore = itemView.findViewById(R.id.btnCartMore);
-            tvName = itemView.findViewById(R.id.tvCartName);
-            tvPrice = itemView.findViewById(R.id.tvCartPrice);
-            tvDesc = itemView.findViewById(R.id.tvCartDesc);
-            tvQuantity = itemView.findViewById(R.id.tvQuantity);
-            btnIncrease = itemView.findViewById(R.id.btnIncrease);
-            btnDecrease = itemView.findViewById(R.id.btnDecrease);
+            ivImage = itemView.findViewById(R.id.ivCartImage);
+            ivMenu = itemView.findViewById(R.id.ivCartMenu);
+            tvName = itemView.findViewById(R.id.tvName);
+            tvPrice = itemView.findViewById(R.id.tvPrice);
+            tvQty = itemView.findViewById(R.id.tvCartQty);
+            btnPlus = itemView.findViewById(R.id.btnCartPlus);
+            btnMinus = itemView.findViewById(R.id.btnCartMinus);
         }
     }
 }

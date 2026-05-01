@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "623025297518",
+    "project_id": "fast-mart-98c66",
+    "storage_bucket": "fast-mart-98c66.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:623025297518:android:9b519fbeb7f8f1a60c2e7f",
+        "android_client_info": {
+          "package_name": "com.livisync.smd_a2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2_8nAoysqAR2NOxIEYXw1WoFbOSL5MQ0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
